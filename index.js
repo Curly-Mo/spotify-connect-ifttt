@@ -44,9 +44,20 @@ function setVolume(req) {
   return player.setVolume(volume, deviceName);
 }
 
+function adjustVolume(req) {
+  let volumeChange;
+  let deviceName;
+  if (req.get('content-type') === 'application/json') {
+    volumeChange = req.body.volume;
+    deviceName = req.body.device;
+  }
+  return player.adjustVolume(volumeChange, deviceName);
+}
+
 exports.skipNext = (req, res) => handleRequest(player.skipNext, req, res);
 exports.skipPrevious = (req, res) => handleRequest(player.skipPrevious, req, res);
 exports.pause = (req, res) => handleRequest(player.pause, req, res);
 exports.play = (req, res) => handleRequest(player.play, req, res);
 exports.playOnDevice = (req, res) => handleRequest(playOnDevice.bind(this, req), req, res);
 exports.setVolume = (req, res) => handleRequest(setVolume.bind(this, req), req, res);
+exports.adjustVolume = (req, res) => handleRequest(adjustVolume.bind(this, req), req, res);

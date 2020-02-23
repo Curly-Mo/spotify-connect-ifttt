@@ -16,6 +16,12 @@ switch(cmd.toLowerCase()) {
       .then(() => console.log('Volume changed successfully'))
       .catch((err) => { console.error(err); });
     break;
+  case "adjust_volume":
+    player
+      .adjustVolume(...args)
+      .then(() => console.log('Volume changed successfully'))
+      .catch((err) => { console.error(err); });
+    break;
   case "next":
     player
       .skipNext(...args)
