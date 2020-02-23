@@ -1,12 +1,14 @@
 const config = require('./config.json');
 const player = require('./lib/player.js');
 
+let devicesCache;
+
 function isAuthenticated(req, res) {
   if (req.body.secret && req.body.secret === config.SECRET) {
     return true;
   }
   console.error('Authentication failed for client');
-  res.end();
+  res(403).send('Authentication failed for client');
   return false;
 }
 
@@ -15,43 +17,53 @@ function handleRequest(handler, req, res) {
   if (!isAuthenticated(req, res)) return;
 
   handler()
-    .then(res.end())
+    .then(response => res.send(response))
     .catch((body) => {
       console.error(body);
       res.end();
     });
 }
 
-function playOnDevice(req) {
-  let deviceName;
-  let play;
-  if (req.get('content-type') === 'application/json') {
-    deviceName = req.body.device;
-    play = (req.body.play == "true" || req.body.play == true);
+function updateCache(newValue) {
+  if(!devicesCache && newValue.length > 0) {
+    devicesCache = newValue;
   }
+}
 
-  // Start playback on device
-  return player.playOnDevice(deviceName, play);
+function parsePayload(req, requiredArgs, optionalArgs = []) {
+  let required = requiredArgs.reduce((agg, arg) => ({...agg, [arg]: req.body[arg]}), {});
+  let optional = optionalArgs.reduce((agg, arg) => ({...agg, [arg]: req.body[arg]}), {});
+  Object.entries(required).forEach(([name, value]) => {
+    if(value == null || value === undefined || value === '') {
+      throw new Error(`${name} is required. Invalid value for ${name}: ${value}`);
+    }
+  });
+  return {...required, ...optional};
+}
+
+function playOnDevice(req) {
+  console.log("initialCache: ", devicesCache);
+  let args = parsePayload(req, ["device"], ["play"]);
+  let playBoolean = (args.play == "true" || args.play == true);
+  let response = player.playOnDevice(args.device, playBoolean, devicesCache);
+  updateCache(response);
+  return response;
 }
 
 function setVolume(req) {
-  let volume;
-  let deviceName;
-  if (req.get('content-type') === 'application/json') {
-    volume = req.body.volume;
-    deviceName = req.body.device;
-  }
-  return player.setVolume(volume, deviceName);
+  console.log("initialCache: ", devicesCache);
+  let args = parsePayload(req, ["volume"], ["device"]);
+  let response = player.setVolume(args.volume, args.device, devicesCache);
+  updateCache(response);
+  return response;
 }
 
-function adjustVolume(req) {
-  let volumeChange;
-  let deviceName;
-  if (req.get('content-type') === 'application/json') {
-    volumeChange = req.body.volume;
-    deviceName = req.body.device;
-  }
-  return player.adjustVolume(volumeChange, deviceName);
+async function adjustVolume(req) {
+  console.log("initialCache: ", devicesCache);
+  let args = parsePayload(req, ["volume", "device"]);
+  let response = await player.adjustVolume(args.volume, args.device, devicesCache);
+  updateCache(response);
+  return response;
 }
 
 exports.skipNext = (req, res) => handleRequest(player.skipNext, req, res);
