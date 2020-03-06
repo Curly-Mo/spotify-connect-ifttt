@@ -59,9 +59,8 @@ function setVolume(req) {
 }
 
 async function adjustVolume(req) {
-  console.log("initialCache: ", devicesCache);
   let args = parsePayload(req, ["volume", "device"]);
-  let response = await player.adjustVolume(args.volume, args.device, devicesCache);
+  let response = await player.adjustVolume(args.volume, args.device);
   updateCache(response);
   return response;
 }
