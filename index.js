@@ -59,7 +59,7 @@ function setVolume(req) {
 }
 
 async function adjustVolume(req) {
-  let args = parsePayload(req, ["volume", "device"]);
+  let args = parsePayload(req, ["volume"], ["device"]);
   let response = await player.adjustVolume(args.volume, args.device);
   updateCache(response);
   return response;
@@ -69,6 +69,8 @@ exports.skipNext = (req, res) => handleRequest(player.skipNext, req, res);
 exports.skipPrevious = (req, res) => handleRequest(player.skipPrevious, req, res);
 exports.pause = (req, res) => handleRequest(player.pause, req, res);
 exports.play = (req, res) => handleRequest(player.play, req, res);
+exports.playToggle = (req, res) => handleRequest(player.playToggle, req, res);
 exports.playOnDevice = (req, res) => handleRequest(playOnDevice.bind(this, req), req, res);
 exports.setVolume = (req, res) => handleRequest(setVolume.bind(this, req), req, res);
 exports.adjustVolume = (req, res) => handleRequest(adjustVolume.bind(this, req), req, res);
+exports.playerInfo = (req, res) => handleRequest(player.playerInfo, req, res);
